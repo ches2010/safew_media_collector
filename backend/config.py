@@ -11,7 +11,7 @@ CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID')) # 确保是整数
 
 # Flask 配置
 FLASK_HOST = '0.0.0.0' # 监听所有接口，以便外部访问
-FLASK_PORT = 5000
+FLASK_PORT = 9890
 
 # 文件存储路径
 MEDIA_FOLDER = 'media'
