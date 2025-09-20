@@ -1,0 +1,19 @@
+[Unit]
+Description=SafeW Media Collector Service
+After=network.target
+
+[Service]
+ExecStart={{PYTHON_EXEC}} {{PROJECT_DIR}}/backend/app.py
+WorkingDirectory={{PROJECT_DIR}}
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=safew_media_collector
+Restart=always
+User={{SERVICE_USER}}
+Group={{SERVICE_GROUP}}
+
+# Environment variables loaded from .env file
+EnvironmentFile={{PROJECT_DIR}}/.env
+
+[Install]
+WantedBy=multi-user.target
