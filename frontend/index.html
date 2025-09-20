@@ -10,6 +10,44 @@
             margin: 20px;
             background-color: #f5f5f5;
         }
+        #controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        #controls label {
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        #controls input[type="datetime-local"], #controls select {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        #controls button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        #controls button:hover {
+            background-color: #0056b3;
+        }
+        #controls button#clear-filters {
+             background-color: #6c757d;
+        }
+        #controls button#clear-filters:hover {
+             background-color: #545b62;
+        }
+
+
         #media-container {
             display: flex;
             flex-wrap: wrap;
@@ -22,20 +60,21 @@
             overflow: hidden;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             background-color: white;
-            width: 300px; /* 固定宽度 */
+            width: 300px;
             transition: transform 0.2s;
+            position: relative; /* For delete button positioning */
         }
         .media-item:hover {
              transform: scale(1.02);
         }
         .media-content {
             width: 100%;
-            height: 250px; /* 固定高度 */
-            object-fit: cover; /* 保持比例，裁剪填充 */
+            height: 250px;
+            object-fit: cover;
             display: block;
         }
         video.media-content {
-             height: auto; /* 视频保持原始比例 */
+             height: auto;
              max-height: 250px;
         }
         .media-info {
@@ -46,82 +85,202 @@
         .media-info p {
             margin: 5px 0;
         }
+        .delete-btn {
+             position: absolute;
+             top: 10px;
+             right: 10px;
+             background-color: #dc3545;
+             color: white;
+             border: none;
+             border-radius: 50%;
+             width: 30px;
+             height: 30px;
+             cursor: pointer;
+             font-weight: bold;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             opacity: 0.8;
+             transition: opacity 0.2s;
+        }
+        .delete-btn:hover {
+             opacity: 1;
+             background-color: #bd2130;
+        }
         h1 {
              text-align: center;
              color: #333;
         }
-        #loading {
+        #loading, #error {
              text-align: center;
              margin-top: 50px;
              font-size: 1.2em;
+        }
+        #loading {
              color: #777;
         }
         #error {
+             color: red;
+        }
+        .no-media {
              text-align: center;
              margin-top: 50px;
-             font-size: 1.2em;
-             color: red;
+             font-size: 1.1em;
+             color: #666;
         }
     </style>
 </head>
 <body>
     <h1>SafeW 媒体查看器</h1>
+
+    <!-- 更新：控制区域 -->
+    <div id="controls">
+        <label for="since">从:</label>
+        <input type="datetime-local" id="since">
+
+        <label for="until">到:</label>
+        <input type="datetime-local" id="until">
+
+        <!-- 新增：频道筛选 -->
+        <label for="channel-id">频道:</label>
+        <select id="channel-id">
+            <option value="">全部频道</option>
+            <!-- 选项将由 JS 动态填充 -->
+        </select>
+
+        <button id="apply-filters">应用筛选</button>
+        <button id="clear-filters">清除筛选</button>
+    </div>
+
     <div id="loading">加载中...</div>
     <div id="error" style="display:none;"></div>
+    <div id="no-media" class="no-media" style="display:none;">暂无匹配的媒体文件。</div>
     <div id="media-container"></div>
 
     <script>
-        const API_URL = '/media'; // Flask 提供的 API 端点
+        const BASE_API_URL = '/media';
+        const CHANNELS_API_URL = '/channels'; // 新增：获取频道列表的 API
 
-        async function fetchMedia() {
+        const sinceInput = document.getElementById('since');
+        const untilInput = document.getElementById('until');
+        const channelIdSelect = document.getElementById('channel-id'); // 新增
+        const applyFiltersBtn = document.getElementById('apply-filters');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        const noMediaElement = document.getElementById('no-media');
+
+        let currentFilters = { since: null, until: null, channel_id: null }; // 更新：包含 channel_id
+
+        // --- 新增：加载频道列表 ---
+        async function loadChannelOptions() {
+            try {
+                const response = await fetch(CHANNELS_API_URL);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                const channelIds = data.channel_ids || [];
+
+                channelIdSelect.innerHTML = '<option value="">全部频道</option>'; // 重置并添加默认选项
+                channelIds.forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    // 简单显示 ID，实际应用中可以从 API 或配置获取名称
+                    option.textContent = `频道 ${id}`;
+                    channelIdSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载频道列表失败:', error);
+                // 可以在页面上显示错误，或禁用频道筛选
+            }
+        }
+
+        function buildApiUrl(filters) {
+            let url = BASE_API_URL;
+            const params = new URLSearchParams();
+            if (filters.since) params.append('since', filters.since);
+            if (filters.until) params.append('until', filters.until);
+            // 更新：添加 channel_id 参数
+            if (filters.channel_id) params.append('channel_id', filters.channel_id);
+            return url + (params.toString() ? '?' + params.toString() : '');
+        }
+
+        async function fetchAndDisplayMedia(filters = currentFilters) {
             const loadingElement = document.getElementById('loading');
             const errorElement = document.getElementById('error');
             const container = document.getElementById('media-container');
+            const apiUrl = buildApiUrl(filters);
 
             try {
                 loadingElement.style.display = 'block';
                 errorElement.style.display = 'none';
-                container.innerHTML = ''; // 清空现有内容
+                noMediaElement.style.display = 'none';
+                container.innerHTML = '';
 
-                const response = await fetch(API_URL);
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const mediaList = await response.json();
 
+                loadingElement.style.display = 'none';
+
                 if (mediaList.length === 0) {
-                    loadingElement.textContent = '暂无媒体文件。';
+                    noMediaElement.style.display = 'block';
                     return;
                 }
-
-                loadingElement.style.display = 'none';
 
                 mediaList.forEach(item => {
                     const mediaElement = document.createElement('div');
                     mediaElement.className = 'media-item';
+                    mediaElement.dataset.id = item.id;
 
                     let contentHtml = '';
                     if (item.filename.toLowerCase().endsWith('.mp4') ||
                         item.filename.toLowerCase().endsWith('.mov') ||
                         item.filename.toLowerCase().endsWith('.avi') ||
                         item.filename.toLowerCase().endsWith('.mkv')) {
-                         // 视频
-                        contentHtml = `<video class="media-content" src="${item.url}" controls></video>`;
+                         contentHtml = `<video class="media-content" src="${item.url}" controls></video>`;
                     } else {
-                        // 图片
                         contentHtml = `<img class="media-content" src="${item.url}" alt="${item.filename}">`;
                     }
 
+                    const deleteBtnHtml = `<button class="delete-btn" title="删除">X</button>`;
+
+                    // 可选：在信息中显示来源频道
+                    const channelInfo = item.channel_id ? `<p><strong>来源频道:</strong> ${item.channel_id}</p>` : '';
+
                     mediaElement.innerHTML = `
+                        ${deleteBtnHtml}
                         ${contentHtml}
                         <div class="media-info">
                             <p><strong>文件名:</strong> ${item.filename}</p>
                             <p><strong>时间:</strong> ${new Date(item.timestamp).toLocaleString()}</p>
+                            ${channelInfo} <!-- 显示频道信息 -->
                             <p><strong>消息:</strong> ${item.message_content || '无'}</p>
                             <p><a href="${item.url}" target="_blank">直接链接</a></p>
                         </div>
                     `;
                     container.appendChild(mediaElement);
+
+                    const deleteButton = mediaElement.querySelector('.delete-btn');
+                    deleteButton.addEventListener('click', async (event) => {
+                        event.stopPropagation();
+                        if (confirm(`确定要删除文件 "${item.filename}" 吗？此操作不可逆。`)) {
+                            try {
+                                const deleteResponse = await fetch(`/media/${item.id}`, {
+                                    method: 'DELETE'
+                                });
+                                if (deleteResponse.ok) {
+                                    mediaElement.remove();
+                                    console.log(`Media ${item.id} deleted.`);
+                                } else {
+                                    const errorData = await deleteResponse.json();
+                                    throw new Error(errorData.message || '删除失败');
+                                }
+                            } catch (deleteError) {
+                                 console.error('删除失败:', deleteError);
+                                 alert(`删除失败: ${deleteError.message}`);
+                            }
+                        }
+                    });
                 });
             } catch (error) {
                  console.error('获取媒体失败:', error);
@@ -131,9 +290,38 @@
             }
         }
 
-        // 页面加载完成后获取媒体
-        window.addEventListener('DOMContentLoaded', (event) => {
-             fetchMedia();
+        applyFiltersBtn.addEventListener('click', () => {
+            const sinceValue = sinceInput.value;
+            const untilValue = untilInput.value;
+            // 新增：获取频道筛选值
+            const selectedChannelId = channelIdSelect.value;
+
+            if (sinceValue && untilValue && new Date(sinceValue) > new Date(untilValue)) {
+                 alert("开始时间不能晚于结束时间！");
+                 return;
+            }
+
+            currentFilters = {
+                since: sinceValue ? new Date(sinceValue).toISOString() : null,
+                until: untilValue ? new Date(untilValue).toISOString() : null,
+                // 更新：包含 channel_id
+                channel_id: selectedChannelId || null // 空字符串或 'null' 都转为 JS 的 null
+            };
+            fetchAndDisplayMedia(currentFilters);
+        });
+
+        clearFiltersBtn.addEventListener('click', () => {
+            sinceInput.value = '';
+            untilInput.value = '';
+            channelIdSelect.value = ''; // 新增：清空频道选择
+            currentFilters = { since: null, until: null, channel_id: null }; // 更新
+            fetchAndDisplayMedia(currentFilters);
+        });
+
+        // 页面加载完成后获取媒体和频道列表
+        window.addEventListener('DOMContentLoaded', async (event) => {
+             await loadChannelOptions(); // 新增：先加载频道
+             fetchAndDisplayMedia(); // 再加载媒体
         });
     </script>
 </body>
