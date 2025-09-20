@@ -32,7 +32,6 @@
     git clone https://github.com/ches2010/safew_media_collector.git
     cd safew_media_collector
     ```
-    *(请将 `yourusername` 替换为你的实际 GitHub 用户名)*
 
 2.  **配置环境变量:**
     *   复制 `.env.example` 文件:
