@@ -1,0 +1,4 @@
+discord.py
+flask
+flask-cors
+python-dotenv # 可选，用于管理环境变量
