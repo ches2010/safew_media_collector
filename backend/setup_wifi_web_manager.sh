@@ -173,7 +173,7 @@ def toggle_wifi():
         return jsonify({"error": "无效操作"})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    app.run(host='0.0.0.0', port=9576, debug=False)
 EOF
 
 echo -e "${GREEN}✅ app.py 创建完成${NC}"
@@ -367,6 +367,6 @@ echo -e "${GREEN}请运行以下命令启动服务：${NC}"
 echo ""
 echo -e "    cd ~/wifi-manager && ./start.sh"
 echo ""
-echo -e "${YELLOW}然后在浏览器访问：http://<你的服务器IP>:8080${NC}"
+echo -e "${YELLOW}然后在浏览器访问：http://<你的服务器IP>:9576${NC}"
 echo ""
 echo -e "${YELLOW}建议设置开机自启（见下方说明）${NC}"
