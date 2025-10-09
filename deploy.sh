@@ -137,7 +137,7 @@ show_completion_info() {
     # 从环境变量获取端口或使用默认值
     FLASK_PORT=$(grep "^FLASK_PORT=" "$ENV_FILE" | cut -d'=' -f2)
     if [ -z "$FLASK_PORT" ]; then
-        FLASK_PORT=5000
+        FLASK_PORT=5689
     fi
     
     echo "您可以通过以下地址访问媒体收藏家："
