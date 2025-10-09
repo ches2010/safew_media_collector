@@ -1,4 +1,6 @@
-discord.py
-flask
-flask-cors
-python-dotenv # 可选，用于管理环境变量
+discord.py>=2.3.2
+flask>=2.2.3
+flask-cors>=4.0.0
+python-dotenv>=1.0.0
+waitress>=2.1.2
+requests>=2.31.0
