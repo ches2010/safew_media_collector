@@ -3,19 +3,17 @@ Description=SafeW Media Collector Service
 After=network.target
 
 [Service]
-# 根据你的实际 Python 虚拟环境路径修改
-ExecStart=/usr/bin/python3 /path/to/safew_media_collector/backend/app.py
-WorkingDirectory=/path/to/safew_media_collector
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=safew-media-collector
+User={{ USER }}
+Group={{ GROUP }}
+WorkingDirectory={{ PROJECT_ROOT }}/backend
+Environment="PATH={{ PROJECT_ROOT }}/backend/venv/bin"
+ExecStart={{ PROJECT_ROOT }}/backend/venv/bin/python app.py
 Restart=always
-User=your_username # 替换为运行服务的用户
-Group=your_groupname # 替换为运行服务的用户组 (可选)
-
-# 环境变量 (推荐使用 .env 文件管理敏感信息)
-Environment=DISCORD_BOT_TOKEN=YOUR_BOT_TOKEN_HERE
-Environment=DISCORD_CHANNEL_ID=YOUR_CHANNEL_ID_HERE
+RestartSec=5
+KillMode=process
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
