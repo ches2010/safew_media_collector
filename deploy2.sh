@@ -98,4 +98,4 @@ setup_venv() {
 echo "✅ 部署完成！正在启动服务..."
 echo "🌐 访问地址: http://0.0.0.0:5689"
 echo "🛑 按 Ctrl+C 停止服务"
-"$VENV_DIR/bin/python" "$BACKEND_DIR/app.py"
+"python" "$BACKEND_DIR/app.py"
