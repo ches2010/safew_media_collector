@@ -3,17 +3,17 @@ Description=SafeW Media Collector Service
 After=network.target
 
 [Service]
-ExecStart={{PYTHON_EXEC}} {{PROJECT_DIR}}/backend/app.py
-WorkingDirectory={{PROJECT_DIR}}
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=safew_media_collector
+User={{ USER }}
+Group={{ GROUP }}
+WorkingDirectory={{ PROJECT_ROOT }}/backend
+Environment="PATH={{ PROJECT_ROOT }}/backend/venv/bin"
+ExecStart={{ PROJECT_ROOT }}/backend/venv/bin/python app.py
 Restart=always
-User={{SERVICE_USER}}
-Group={{SERVICE_GROUP}}
-
-# Environment variables loaded from .env file
-EnvironmentFile={{PROJECT_DIR}}/.env
+RestartSec=5
+KillMode=process
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
