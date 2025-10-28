@@ -8,6 +8,10 @@ from utils.state_manager import load_last_message_id, save_last_message_id
 import time
 import signal
 import sys
+import os
+
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
 
 logger = get_logger(__name__)
 
