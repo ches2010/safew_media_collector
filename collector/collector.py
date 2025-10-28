@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
 from config import TARGET_CHANNEL_ID, REFRESH_INTERVAL
@@ -7,11 +11,6 @@ from utils.logger import get_logger
 from utils.state_manager import load_last_message_id, save_last_message_id
 import time
 import signal
-import sys
-import os
-
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(project_root)
 
 logger = get_logger(__name__)
 

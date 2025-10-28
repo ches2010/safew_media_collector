@@ -9,6 +9,8 @@ if ! command -v python3 &>/dev/null; then
     exit 1
 fi
 
+PYTHONPATH="$SCRIPT_DIR" python3 -m collector.collector
+
 # 启动采集服务
 echo "启动SafeW媒体采集服务..."
 python3 -m collector.collector
