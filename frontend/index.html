@@ -466,7 +466,7 @@
             
             try {
                 const offset = (state.currentPage - 1) * state.itemsPerPage;
-                let url = `/media?limit=${state.itemsPerPage}&offset=${offset}`;
+                let url = `/api/media?limit=${state.itemsPerPage}&offset=${offset}`;
                 
                 if (state.currentChannel) {
                     url += `&channel_id=${state.currentChannel}`;
