@@ -1,0 +1,43 @@
+.waterfall-container {
+    column-count: 4;
+    column-gap: 16px;
+    padding: 20px 0;
+}
+
+.waterfall-item {
+    break-inside: avoid;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: white;
+}
+
+.waterfall-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.waterfall-item img:hover {
+    transform: scale(1.02);
+}
+
+@media (max-width: 1200px) {
+    .waterfall-container {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .waterfall-container {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 480px) {
+    .waterfall-container {
+        column-count: 1;
+    }
+}

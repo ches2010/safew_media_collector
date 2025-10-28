@@ -1,0 +1,12 @@
+[Unit]
+Description=SafeW Media Collector
+After=network.target
+
+[Service]
+User=yourusername
+WorkingDirectory=/path/to/safew_media_collector
+ExecStart=/usr/bin/python3 -m collector.collector
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

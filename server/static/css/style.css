@@ -1,0 +1,113 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+}
+
+nav a {
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    margin-right: 1.5rem;
+    font-size: 1.1rem;
+    padding: 0.3rem 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+nav a:hover, nav a.active {
+    color: white;
+    border-bottom: 2px solid #3498db;
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.home-page {
+    text-align: center;
+    padding: 2rem;
+}
+
+.home-page p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.home-page ul {
+    list-style: none;
+    margin-top: 2rem;
+}
+
+.home-page li {
+    margin: 1rem 0;
+}
+
+.home-page a {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.home-page a:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+.media-info {
+    padding: 12px;
+    background: #fff;
+}
+
+.caption {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.4;
+}
+
+.date, .meta {
+    margin: 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.videos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.video-item {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.video-item video {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+}

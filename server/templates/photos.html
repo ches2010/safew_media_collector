@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeW 图片收藏</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/waterfall.css">
+</head>
+<body>
+    <header>
+        <h1>SafeW 媒体收藏</h1>
+        <nav>
+            <a href="/photos" class="active">图片</a>
+            <a href="/videos">视频</a>
+        </nav>
+    </header>
+    
+    <main>
+        <div class="waterfall-container" id="photoContainer">
+            <!-- 图片将通过JS动态加载 -->
+        </div>
+    </main>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+        // 加载图片并渲染瀑布流
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/photos')
+                .then(response => response.json())
+                .then(photos => {
+                    const container = document.getElementById('photoContainer');
+                    photos.forEach(photo => {
+                        // 获取元数据
+                        fetch(`/api/metadata/${photo.file_id}`)
+                            .then(res => res.json())
+                            .then(metadata => {
+                                const item = document.createElement('div');
+                                item.className = 'waterfall-item';
+                                // 格式化时间（时间戳转日期）
+                                const date = new Date(metadata.date * 1000).toLocaleString();
+                                // 拼接HTML（包含图片和文本信息）
+                                item.innerHTML = `
+                                    <img src="/media/photos/${photo.filename}" alt="SafeW图片">
+                                    <div class="media-info">
+                                        <p class="caption">${metadata.caption || '无说明文字'}</p>
+                                        <p class="date">发布时间: ${date}</p>
+                                    </div>
+                                `;
+                                container.appendChild(item);
+                            })
+                            .catch(err => {
+                                console.error('获取元数据失败:', err);
+                                // 即使元数据获取失败也显示图片
+                                const item = document.createElement('div');
+                                item.className = 'waterfall-item';
+                                item.innerHTML = `<img src="/media/photos/${photo.filename}" alt="SafeW图片">`;
+                                container.appendChild(item);
+                            });
+                    });
+                });
+        });
+    </script>
+</body>
+</html>
