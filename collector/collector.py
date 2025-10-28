@@ -8,9 +8,11 @@ from config import TARGET_CHANNEL_ID, REFRESH_INTERVAL
 from .api_client import SafewApiClient
 from .media_downloader import MediaDownloader
 from utils.logger import get_logger
+from datetime import datetime
 from utils.state_manager import load_last_message_id, save_last_message_id
 import time
 import signal
+
 
 logger = get_logger(__name__)
 
@@ -41,7 +43,7 @@ class MediaCollector:
             'interval',
             seconds=REFRESH_INTERVAL,
             id='media_collect_job',
-            next_run_time=time.time()  # 立即执行一次
+            next_run_time=datetime.now()  # 立即执行一次
         )
         self.scheduler.start()
         logger.info(f"采集服务已启动，目标频道: {TARGET_CHANNEL_ID}，间隔: {REFRESH_INTERVAL}秒")
