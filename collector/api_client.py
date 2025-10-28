@@ -47,3 +47,12 @@ class SafewApiClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"请求失败 [{method}]: {str(e)}")
             return None
+def get_file(self, file_id):
+    """获取文件下载链接"""
+    params = {"file_id": file_id}
+    response = requests.get(f"{self.base_url}/getFile", params=params)
+    response.raise_for_status()
+    result = response.json()
+    if result["ok"]:
+        return result["result"]
+    raise Exception(f"API Error: {result['description']}")
