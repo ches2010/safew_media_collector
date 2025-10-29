@@ -20,6 +20,12 @@ class MediaDownloader:
         create_directory(self.video_path)
         create_directory(self.metadata_path)
 
+    def _get_file_url(self, file_id):
+    """获取文件的下载URL（根据API规范实现）"""
+    file_info = SafewApiClient().get_file(file_id)
+    # 构建完整下载URL
+    return f"https://api.safew.org/file/bot{BOT_TOKEN}/{file_info['file_path']}"
+
     def _load_existing_hashes(self, directory):
         """加载已存在文件的哈希值（用于去重）"""
         hashes = set()
@@ -93,50 +99,75 @@ class MediaDownloader:
     def parse_media_from_messages(self, messages):
         """从消息列表中解析并下载媒体"""
         media_list = {"photos": [], "videos": []}
-        
-        for msg in messages:
-            # 只处理包含媒体的消息
-            if "message" not in msg:
+        media_groups = {}  # 临时存储媒体组消息
+
+        for update in updates:
+            # 检查是否包含消息对象
+            if "message" not in update:
                 continue
-            message = msg["message"]
+            msg = update["message"]
             
             # 提取通用消息信息
             message_info = {
-                "message_id": message.get("message_id", ""),
-                "date": message.get("date", ""),  # 时间戳
-                "caption": message.get("caption", ""),  # 媒体说明文字
-                "caption_entities": message.get("caption_entities", [])  # 说明文字中的实体（如链接）
+                "message_id": msg.get("message_id", ""),
+                "date": msg.get("date", ""),  # 时间戳
+                "caption": msg.get("caption", ""),  # 媒体说明文字
+                "caption_entities": msg.get("caption_entities", [])  # 说明文字中的实体（如链接）
             }
             
-            # 处理图片
-            if "photo" in message and message["photo"]:
-                # 选择最高质量的图片（最大尺寸）
-                best_photo = max(message["photo"], key=lambda x: x.get("file_size", 0))
-                file_path = self.download_media(best_photo["file_id"], is_photo=True)
-                if file_path:
-                    # 保存图片元数据
-                    self.save_media_metadata(
-                        best_photo["file_id"],
-                        {**message_info, "photo_sizes": message["photo"]},  # 包含所有尺寸信息
-                        is_photo=True
-                    )
-                    media_list["photos"].append(file_path)
-            
-            # 处理视频
-            if "video" in message:
-                video_info = message["video"]
-                file_path = self.download_media(video_info["file_id"], is_photo=False)
-                if file_path:
-                    # 保存视频元数据（包含时长、尺寸等）
-                    self.save_media_metadata(
-                        video_info["file_id"],
-                        {** message_info,
-                         "duration": video_info.get("duration", 0),
-                         "width": video_info.get("width", 0),
-                         "height": video_info.get("height", 0),
-                         "file_size": video_info.get("file_size", 0)},
-                        is_photo=False
-                    )
-                    media_list["videos"].append(file_path)
+            # 处理媒体组（可能包含多张图片）
+            media_group_id = msg.get("media_group_id")
+            if media_group_id:
+                if media_group_id not in media_groups:
+                    media_groups[media_group_id] = []
+                media_groups[media_group_id].append(msg)
+
+            # 处理单张图片
+            if "photo" in msg and msg["photo"]:
+                self._process_photo(msg, message_info, media_list)
         
-        return media_list
+            # 处理单个视频
+            if "video" in msg:
+                self._process_video(msg, message_info, media_list)
+        # 处理媒体组中的所有媒体
+        for group in media_groups.values():
+            for msg in group:
+                message_info = {
+                    "message_id": msg.get("message_id", ""),
+                    "date": msg.get("date", ""),
+                    "caption": msg.get("caption", ""),
+                    "media_group_id": msg.get("media_group_id")
+                }
+                if "photo" in msg:
+                    self._process_photo(msg, message_info, media_list)
+                if "video" in msg:
+                    self._process_video(msg, message_info, media_list)
+    
+    return media_list
+
+    def _process_photo(self, msg, message_info, media_list):
+        """单独提取图片处理逻辑，确保正确下载"""
+        best_photo = max(msg["photo"], key=lambda x: x.get("file_size", 0))
+        file_path = self.download_media(best_photo["file_id"], is_photo=True)
+        if file_path:
+            self.save_media_metadata(
+                best_photo["file_id"],
+                {** message_info, "photo_sizes": msg["photo"]},
+                is_photo=True
+            )
+            media_list["photos"].append(file_path)
+
+    def _process_video(self, msg, message_info, media_list):
+        """单独提取视频处理逻辑"""
+        video_info = msg["video"]
+        file_path = self.download_media(video_info["file_id"], is_photo=False)
+        if file_path:
+            self.save_media_metadata(
+                video_info["file_id"],
+                {**message_info,
+                 "duration": video_info.get("duration", 0),
+                 "width": video_info.get("width", 0),
+                 "height": video_info.get("height", 0)},
+                is_photo=False
+            )
+            media_list["videos"].append(file_path)

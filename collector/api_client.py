@@ -13,13 +13,16 @@ class SafewApiClient:
         params = {"chat_id": chat_id}
         return self._request("getChat", params)
 
-    def get_channel_messages(self, chat_id, offset=0, limit=100):
+    def get_channel_messages(self, offset=0, limit=100, allowed_updates=None):
         """获取频道消息（分页）"""
-        params = {
+        params = {            
             "offset": offset,
-            "limit": limit,
-            "allowed_updates": ["message"]
+            "limit": limit            
         }
+        # 处理可选的更新类型过滤
+        if allowed_updates:
+            params["allowed_updates"] = allowed_updates        
+
         return self._request("getUpdates", params)
 
     def get_file_info(self, file_id):
