@@ -17,20 +17,6 @@ def get_existing_files(storage_path):
             existing.add(file_id)
     return existing
 
-# 在MediaDownloader中使用
-def parse_media_from_messages(self, updates):
-    # 获取已存在的文件ID，避免重复下载
-    existing_photos = get_existing_files(PHOTO_STORAGE_PATH)
-    existing_videos = get_existing_files(VIDEO_STORAGE_PATH)
-    
-    # ...省略其他代码...
-    # 处理图片时检查
-    if highest_quality["file_id"] not in existing_photos:
-        # 执行下载
-    # 处理视频时检查
-    if msg["video"]["file_id"] not in existing_videos:
-        # 执行下载
-
 def create_directory(path):
     """创建目录（如果不存在）"""
     Path(path).mkdir(parents=True, exist_ok=True)

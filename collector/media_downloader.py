@@ -1,14 +1,15 @@
 import os
 import requests
-from config import PHOTO_STORAGE_PATH, VIDEO_STORAGE_PATH, METADATA_STORAGE_PATH
+from config import PHOTO_STORAGE_PATH, VIDEO_STORAGE_PATH, METADATA_STORAGE_PATH, BOT_TOKEN
 from utils.file_utils import create_directory, is_file_duplicate, save_json
 from utils.logger import get_logger
+from .api_client import SafewApiClient  # 导入API客户端类
 
 logger = get_logger(__name__)
 
 class MediaDownloader:
     def __init__(self, api_client):
-        self.api_client = api_client
+        self.api_client = api_client  # 使用传入的api_client实例
         self.photo_path = PHOTO_STORAGE_PATH
         self.video_path = VIDEO_STORAGE_PATH
         self.metadata_path = METADATA_STORAGE_PATH
@@ -22,7 +23,11 @@ class MediaDownloader:
 
     def _get_file_url(self, file_id):
         """获取文件的下载URL（根据API规范实现）"""
-        file_info = SafewApiClient().get_file(file_id)
+        # 使用实例化的api_client，而非重新创建
+        file_info = self.api_client.get_file_info(file_id)
+        if not file_info or "file_path" not in file_info:
+            logger.error(f"无法获取文件路径 file_id={file_id}")
+            return None
         # 构建完整下载URL
         return f"https://api.safew.org/file/bot{BOT_TOKEN}/{file_info['file_path']}"
 
@@ -50,8 +55,11 @@ class MediaDownloader:
             logger.error(f"无法获取文件信息 file_id={file_id}")
             return None
 
-        # 获取下载链接
-        file_url = self.api_client.get_file_download_url(file_info["file_path"])
+        # 获取下载链接（使用统一的_get_file_url方法）
+        file_url = self._get_file_url(file_id)
+        if not file_url:
+            return None
+
         storage_path = self.photo_path if is_photo else self.video_path
         hash_store = self.photo_hashes if is_photo else self.video_hashes
 
@@ -96,11 +104,12 @@ class MediaDownloader:
         metadata['storage_path'] = self.photo_path if is_photo else self.video_path
         return save_json(metadata, metadata_path)
 
-    def parse_media_from_messages(self, messages):
-        """从消息列表中解析并下载媒体"""
+    def parse_media_from_messages(self, updates):
+        """从更新列表中解析并下载媒体（参数名统一为updates）"""
         media_list = {"photos": [], "videos": []}
         media_groups = {}  # 临时存储媒体组消息
 
+        # 遍历参数updates（修正变量名，与参数一致）
         for update in updates:
             # 检查是否包含消息对象
             if "message" not in update:
@@ -112,7 +121,7 @@ class MediaDownloader:
                 "message_id": msg.get("message_id", ""),
                 "date": msg.get("date", ""),  # 时间戳
                 "caption": msg.get("caption", ""),  # 媒体说明文字
-                "caption_entities": msg.get("caption_entities", [])  # 说明文字中的实体（如链接）
+                "caption_entities": msg.get("caption_entities", [])
             }
             
             # 处理媒体组（可能包含多张图片）
@@ -129,6 +138,7 @@ class MediaDownloader:
             # 处理单个视频
             if "video" in msg:
                 self._process_video(msg, message_info, media_list)
+        
         # 处理媒体组中的所有媒体
         for group in media_groups.values():
             for msg in group:
