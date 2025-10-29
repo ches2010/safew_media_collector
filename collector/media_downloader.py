@@ -143,7 +143,7 @@ class MediaDownloader:
                 if "video" in msg:
                     self._process_video(msg, message_info, media_list)
     
-    return media_list
+        return media_list
 
     def _process_photo(self, msg, message_info, media_list):
         """单独提取图片处理逻辑，确保正确下载"""
