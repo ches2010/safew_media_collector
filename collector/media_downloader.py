@@ -21,10 +21,10 @@ class MediaDownloader:
         create_directory(self.metadata_path)
 
     def _get_file_url(self, file_id):
-    """获取文件的下载URL（根据API规范实现）"""
-    file_info = SafewApiClient().get_file(file_id)
-    # 构建完整下载URL
-    return f"https://api.safew.org/file/bot{BOT_TOKEN}/{file_info['file_path']}"
+        """获取文件的下载URL（根据API规范实现）"""
+        file_info = SafewApiClient().get_file(file_id)
+        # 构建完整下载URL
+        return f"https://api.safew.org/file/bot{BOT_TOKEN}/{file_info['file_path']}"
 
     def _load_existing_hashes(self, directory):
         """加载已存在文件的哈希值（用于去重）"""
